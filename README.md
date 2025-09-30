@@ -10,7 +10,7 @@ Files needed:
 The only additional file that is needed is an earthquake catalog of japan. This catalog should be a cvs with the following collumns (case sensitive): time, latitude, longitude, depth, magnitude, event_type.
 The csv file is read as dataframe (df). Some notes:
 - time: includes data and time, has to be such that this works: pd.to_datetime(df["time"], format="mixed")
-- event_type: only the earthquakes that are 'earthquake' are considered
+- event_type: only the events that are labeled 'earthquake' are considered
 - latitude/ longitude: in degree with decimal points (not minutes/seconds)
 - depth: in km
 
