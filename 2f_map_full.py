@@ -1,5 +1,5 @@
 # sbatch
-# --array=0-99 --time=480 --mem-per-cpu=128000 --wrap="python 2f_map_full.py"
+# --array=0-499 --time=480 --mem-per-cpu=128000 --wrap="python 2f_map_full.py"
 
 
 # ========= IMPORTS =========
@@ -29,7 +29,7 @@ t = time_module.time()
 # single value
 RESULT_TMP = Path("results/map/tmp_full")
 
-N_REALIZATIONS = 100
+N_REALIZATIONS = 500
 N = 25600  # number of tiles
 DELTA_XY = 0.2  # in deg
 DELTA_Z = 0.2   # in deg

@@ -1,2 +1,4 @@
 *
 !.gitignore
+!tmp
+!tmp_full
