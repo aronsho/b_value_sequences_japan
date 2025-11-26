@@ -64,9 +64,9 @@ MIN_N_SEQ = variables["MIN_N_SEQ"]
 # ========= HELPERS =========
 
 
-def estimate_mc(magnitudes, delta_m):
+def estimate_mc(magnitudes):
     """Maximum curvature as Mc method."""
-    mc, _ = estimate_mc_maxc(magnitudes, delta_m, CORRECTION_FACTOR)
+    mc, _ = estimate_mc_maxc(magnitudes, DELTA_M, CORRECTION_FACTOR)
     return mc
 
 
@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     # --- Find sequences ---
     print('Finding sequences...')
-    # note that post_include_aftershocks means that the sequenecs are found as
+    # note that post_include_aftershocks means that the sequences are found as
     # usual, but aftershock events are added back to the sequences in the end.
     # The reason for this is that we want to remove the sequence including all
     # aftershocks from the map.
@@ -134,8 +134,7 @@ if __name__ == "__main__":
     b_avg, b_std, mac_spatial, mu_mac_spatial, std_mac_spatial = mac_space(
         coords=coords,
         mags=filtered_df.magnitude,
-        delta_m=filtered_df.delta_m,
-        mc=filtered_df.mc,
+        delta_m=DELTA_M,
         times=filtered_df.time,
         limits=limits,
         n_space=N,
@@ -143,6 +142,7 @@ if __name__ == "__main__":
         eval_coords=grid,
         min_num=MIN_N_M,
         method=BPositiveBValueEstimator,
+        mc=filtered_df.mc,
         mc_method=estimate_mc,
         transform=True,
         voronoi_method="random",

@@ -18,23 +18,25 @@ def mirror_voronoi(coords_vor, limits):
     Returns:
         vor:        a Voronoi object computed on the mirrored points.
     """
-    mirrored_sets = [coords_vor]
+    n = len(coords_vor[0, :])
+    mirror_coords = np.zeros([len(limits), (2*len(limits)+1)*n])
+    mirror_coords[:, :n] = coords_vor
+    for ii, limit in enumerate(limits):
+        # make points such that the voronoi cells are confined within the
+        # limits
+        mirror_coords[:, (2*ii+1)*n:(ii+1)*2*n] = coords_vor
+        mirror_coords[ii, (2*ii+1)*n:(ii+1)*2*n] = (
+            2 * limit[1] - coords_vor[ii, :])
+        mirror_coords[:, (ii+1)*2*n:(2*ii+3)*n] = coords_vor
+        mirror_coords[ii, (ii+1)*2*n:(2*ii+3)*n] = (
+            2 * limit[0] - coords_vor[ii, :])
+    points = mirror_coords.T
+    vor = Voronoi(points)
 
-    for dim, (low, high) in enumerate(limits):
-        # Upper mirror
-        upper = coords_vor.copy()
-        upper[dim] = 2 * high - coords_vor[dim]
-        mirrored_sets.append(upper)
-        # Lower mirror
-        lower = coords_vor.copy()
-        lower[dim] = 2 * low - coords_vor[dim]
-        mirrored_sets.append(lower)
-
-    all_points = np.hstack(mirrored_sets).T
-    return Voronoi(all_points)
+    return vor
 
 
-def neighbors_vor(vor, n, nan_idx=None):
+def neighbors_vor(vor, n):
     """
     Find neighbors of given Voronoi points. Indices larger than n (indicating
     mirrorred regions) or with -1 (indicating an open region) are ignored.
@@ -42,7 +44,6 @@ def neighbors_vor(vor, n, nan_idx=None):
     Args:
         vor:    Voronoi object (which contains ridge_points)
         n:      Number of original Voronoi points
-        nan_idx: (Optional) Not used in this version
 
     Returns:
         w:      An n x n matrix where an entry is 1 if the corresponding
@@ -133,7 +134,7 @@ def find_nearest_vor_node(coords_vor, coords):
     return nearest
 
 
-def find_points_in_tile(coords_vor, coords, values, *args):
+def find_points_in_tile(coords_vor, coords, values, nearest=None, *args):
     """
     Find the magnitudes and additional values of the earthquakes in each tile.
 
@@ -143,6 +144,8 @@ def find_points_in_tile(coords_vor, coords, values, *args):
         coords:     coordinates of the EQs [x1, ..., xD], where xi are vectors
                 of the same length (number of Voronoi cells)
         values:     primary values corresponding to the coordinates in coords
+        nearest:    (optional) precomputed indices of the nearest Voronoi node
+                for each coordinate in coords
         *args:      additional vectors of values corresponding to the
                 coordinates in coords
 
@@ -153,7 +156,8 @@ def find_points_in_tile(coords_vor, coords, values, *args):
         element is tile_values, and each subsequent element is the
         corresponding list of values for that extra vector.
     """
-    nearest = find_nearest_vor_node(coords_vor, coords)
+    if nearest is None:
+        nearest = find_nearest_vor_node(coords_vor, coords)
     n_tiles = coords_vor.shape[1]
     tile_values = [values[nearest == i] for i in range(n_tiles)]
     tile_extra_values = tuple([vec[nearest == i]
@@ -177,16 +181,3 @@ def volumes_vor(vor,  n):
         else:
             vol[ii] = ConvexHull(vor.vertices[indices]).volume
     return vol
-
-
-def volumes_vor_pyvoro(cells):
-    """
-    Get the volume of each Voronoi cell from PyVoro output.
-
-    Args:
-        cells: List of PyVoro cell dicts (output of pyvoro.compute_voronoi)
-
-    Returns:
-        volumes: np.array of shape (n_cells,), cell volumes
-    """
-    return np.array([cell['volume'] for cell in cells])

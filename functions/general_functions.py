@@ -53,37 +53,35 @@ def update_welford(existing_aggregate: tuple, new_value: float) -> tuple:
     Returns:
         (updated_count, updated_mean, updated_M2)
     """
-    count, mean, M2 = existing_aggregate
+    count, mean, M2 = tuple(np.array(x, dtype=float, copy=True)
+                            for x in existing_aggregate)
 
     # Convert to np array if not already
-    new_value = np.asarray(new_value)
-    mean = np.asarray(mean)
-    M2 = np.asarray(M2)
-
-    if np.isscalar(count):
-        count = np.array(count)
+    new_value = np.atleast_1d(new_value)
+    mean = np.atleast_1d(mean)
+    M2 = np.atleast_1d(M2)
+    count = np.atleast_1d(count)
 
     # Identify valid components
     valid = ~np.isnan(new_value)
-
-    # Increment count only where valid
-    count_new = np.where(valid, count + 1, count)
+    count[valid] += 1
 
     # Compute deltas only for valid components
     delta = np.zeros_like(mean)
     delta2 = np.zeros_like(mean)
-
     delta[valid] = new_value[valid] - mean[valid]
-    mean_new = mean.copy()
-    mean_new[valid] += delta[valid] / count_new[valid]
-    delta2[valid] = new_value[valid] - mean_new[valid]
-    M2_new = M2.copy()
-    M2_new[valid] += delta[valid] * delta2[valid]
+    mean[valid] += delta[valid] / count[valid]
 
-    return (count_new, mean_new, M2_new)
+    delta2[valid] = new_value[valid] - mean[valid]
+    M2[valid] += delta[valid] * delta2[valid]
+
+    return tuple(np.squeeze(x) for x in (count, mean, M2))
 
 
-def finalize_welford(existing_aggregate: tuple) -> tuple[float, float]:
+def finalize_welford(
+        existing_aggregate: tuple,
+        min_count: int = 1
+) -> tuple[float, float]:
     """Retrieve the mean, variance and sample variance from an aggregate.
 
     Args:
@@ -92,23 +90,29 @@ def finalize_welford(existing_aggregate: tuple) -> tuple[float, float]:
                         M2 is the sum of the squares of the differences for
                         the whole series of which the standard deviation and
                         mean is to be calculated
+        min_count:      minimum number of values required to compute variance
 
     Returns:
         (mean, variance)
     """
-    count, mean, M2 = existing_aggregate
+    count, mean, M2 = tuple(np.array(x, dtype=float, copy=True)
+                            for x in existing_aggregate)
 
-    mean = np.asarray(mean)
-    M2 = np.asarray(M2)
-    count = np.asarray(count)
+    mean = np.atleast_1d(mean)
+    M2 = np.atleast_1d(M2)
+    count = np.atleast_1d(count)
 
     variance = np.full_like(mean, np.nan)
 
-    valid = count > 1
-    # use count - 1 for sample variance if needed
-    variance[valid] = M2[valid] / count[valid]
+    # only take into account components with more than min_count
+    valid = count >= min_count
+    mean[~valid] = np.nan
+    variance[valid] = np.where(
+        count[valid] <= 1,
+        np.nan,
+        M2[valid] / (count[valid]-1))
 
-    return mean, variance
+    return tuple(np.squeeze(x) for x in (mean, variance))
 
 
 def transform_n(
@@ -491,34 +495,3 @@ def b_synth(
             b_parameter=b_parameter,
         )
     return b
-
-
-def empirical_cdf(
-    sample: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Calculate the empirical cumulative distribution function (CDF)
-    from a sample.
-
-    Parameters:
-        sample:     Magnitude sample
-        mc:         Completeness magnitude, if None, the minimum of the sample
-                is used
-        delta_m:    Magnitude bin size, by default 1e-16. Its recommended to
-                use the value that the samples are rounded to.
-        weights:    Sample weights, by default None
-
-    Returns:
-        x:          x-values of the empirical CDF (i.e. the unique vector of
-                magnitudes from mc to the maximum magnitude in the sample,
-                binned by delta_m)
-        y:          y-values of the empirical CDF (i.e., the empirical
-                frequency observed in the sample corresponding to the x-values)
-    """
-
-    idx1 = np.argsort(sample)
-    x = sample[idx1]
-    x, y_count = np.unique(x, return_counts=True)
-    y = np.cumsum(y_count) / len(sample)
-
-    return x, y
