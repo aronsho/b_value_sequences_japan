@@ -31,6 +31,7 @@ B_METHOD = 'global'         # method for b-value estimation
 
 # parameters for sequences (main results)
 MAGNITUDE_THRESHOLD = 6.0       # mainshock magnitude threshold
+DEPTH_THRESHOLD = 150           # depth threshold for catalog
 RUPTURE_RELATION = "surface"    # rupture length relation type
 DAYS_AFTER = 100                # time window after main event
 DAYS_BEFORE = 10 * 365          # time window before main event

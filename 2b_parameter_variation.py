@@ -22,14 +22,14 @@ t = time_module.time()
 RESULT_DIR = Path("results/parameter_variation")
 
 # multiple values
-MAGNITUDE_THRESHOLDS = [6.5]
-B_METHODS = ["global"]
-RUPTURE_RELATIONS = ["surface"]
-DAYS_AFTERS = [100]
-DISTANCE_TO_COASTS = [40]
-DIMENSIONS = [3]
-EXCLUDE_AFTERSHOCKS_DAYS = [1]
-DEPTH_THRESHOLDS = [150]
+MAGNITUDE_THRESHOLDS = [5.5, 6.0, 6.5]
+B_METHODS = ["global", "local"]
+RUPTURE_RELATIONS = ["surface", "subsurface"]
+DAYS_AFTERS = [50, 100, 200]
+DISTANCE_TO_COASTS = [30, 40, 50]
+DIMENSIONS = [2, 3]
+EXCLUDE_AFTERSHOCKS_DAYS = [0, 1, 2]
+DEPTH_THRESHOLDS = [50, 100, 150]
 
 param_grid = it.product(
     MAGNITUDE_THRESHOLDS,
