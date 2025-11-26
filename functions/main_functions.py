@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy import stats
+from tqdm import tqdm
 
 from seismostats import Catalog
 from seismostats.analysis import (
@@ -51,18 +52,18 @@ def distance_series(cat_like: pd.DataFrame,
     raise ValueError("DIMENSION must be 2 or 3.")
 
 
-def find_sequences(cat_close: Catalog,
-                   cat_far: Catalog,
-                   magnitude_threshold: float,
-                   relation: str,
-                   days_after: pd.Timedelta,
-                   days_before: pd.Timedelta,
-                   exclude_aftershocks: pd.Timedelta,
-                   dimension: int,
-                   radius_far: float,
-                   min_n_seq: int,
-                   post_include_aftershocks: bool = False,
-                   ) -> tuple[list[pd.DataFrame], list[int], Catalog]:
+def find_all_sequences(cat_close: Catalog,
+                       cat_far: Catalog,
+                       magnitude_threshold: float,
+                       relation: str,
+                       days_after: pd.Timedelta,
+                       days_before: pd.Timedelta,
+                       exclude_aftershocks: pd.Timedelta,
+                       dimension: int,
+                       radius_far: float,
+                       min_n_seq: int,
+                       post_include_aftershocks: bool = False,
+                       ) -> tuple[list[pd.DataFrame], list[int], Catalog]:
     """
     Identify large-event sequences in catalog.
     Returns (list of sequences, list of main event indices, updated cat_close).
@@ -86,23 +87,6 @@ def find_sequences(cat_close: Catalog,
         start = main["time"] - days_before
         stop = main["time"] + days_after
 
-        # avoid overlap with other large events
-        for jj in large_far.index:
-            if jj == idx:
-                continue
-            other = large_far.loc[jj]
-
-            dist = distance_series(other, main, dimension)
-            if dist < radius_far * (
-                    main["rupture_length"] + other["rupture_length"]):
-                if other["time"] > main["time"]:
-                    stop = min(stop, other["time"])
-                elif other["time"] < main["time"]:
-                    start = max(start, other["time"] + days_after)
-
-        if start > main["time"]:
-            continue
-
         # select nearby events
         dist_all = distance_series(cat_close, main, dimension)
 
@@ -113,8 +97,88 @@ def find_sequences(cat_close: Catalog,
         seq = cat_close[mask].copy()
         seq["distance_to_main"] = dist_all[mask]
 
-        # drop the main event and aftershocks
+        # drop the main event and immediate aftershocks
         seq = seq.drop(idx)
+        mask = (seq["time"] < main["time"]) | (
+            seq["time"] > main["time"] + exclude_aftershocks)
+        seq_loop = seq[mask]
+
+        # only keep sequences with > min_n_seq events
+        if len(seq_loop) > min_n_seq:
+            if post_include_aftershocks:
+                sequences.append(seq)
+            else:
+                sequences.append(seq_loop)
+            main_indices.append(idx)
+
+    return sequences, main_indices, cat_close
+
+
+def find_sequences(cat_close: Catalog,
+                   cat_far: Catalog,
+                   magnitude_threshold: float,
+                   relation: str,
+                   days_after: pd.Timedelta,
+                   days_before: pd.Timedelta,
+                   exclude_aftershocks: pd.Timedelta,
+                   dimension: int,
+                   radius_far: float,
+                   min_n_seq: int,
+                   post_include_aftershocks: bool = False,
+                   ) -> tuple[list[pd.DataFrame], list[int], Catalog]:
+    """
+    Identify large-event sequences in catalog. Then, it removes events that
+    overlap with other large events to avoid double-counting.
+    """
+
+    # select large events
+    large_far = cat_far[cat_far["magnitude"] >= magnitude_threshold].copy()
+    mask_close = cat_close["magnitude"] >= magnitude_threshold
+    large_close = cat_close[mask_close].copy()
+
+    # add rupture lengths
+    large_far["rupture_length"] = rupture_length(
+        large_far["magnitude"].values, relation)
+    rupt_len = rupture_length(large_close["magnitude"].values, relation)
+    large_close["rupture_length"] = rupt_len
+    cat_close.loc[mask_close, "rupture_length"] = rupt_len
+
+    # find sequences
+    sequences, main_indices = [], []
+    progress_bar = tqdm(total=len(large_close) *
+                        len(large_far), desc="Progress")
+    for idx, main in large_close.iterrows():
+        # select nearby events
+        dist_all = distance_series(cat_close, main, dimension)
+        mask_main = (dist_all <= radius_far * main["rupture_length"]) & (
+            cat_close["time"] > main["time"] - days_before) & (
+            cat_close["time"] < main["time"] + days_after)
+
+        # avoid overlap with other large events
+        for jj in large_far.index:
+            if jj == idx:
+                continue
+            progress_bar.update(1)
+            other = large_far.loc[jj]
+            dist = distance_series(other, main, dimension)
+
+            # avoid overlap
+            if dist < radius_far * (
+                    main["rupture_length"] + other["rupture_length"]):
+                dist_all_other = distance_series(cat_close, other, dimension)
+                mask_other = (dist_all_other <= radius_far *
+                              other["rupture_length"])
+                if other["time"] > main["time"]:
+                    mask_time = cat_close["time"] >= other["time"]
+                elif other["time"] <= main["time"]:
+                    mask_time = cat_close["time"] <= other["time"] + days_after
+                mask_loop = mask_other & mask_time
+                mask_main = mask_main & ~mask_loop
+
+        seq = cat_close[mask_main].copy()
+        seq["distance_to_main"] = dist_all[mask_main]
+
+        # drop the main event and immediate aftershocks
         mask = (seq["time"] < main["time"]) | (
             seq["time"] > main["time"] + exclude_aftershocks)
         seq_loop = seq[mask]
@@ -315,20 +379,23 @@ def test_hypothesis(df: pd.DataFrame) -> pd.DataFrame:
         diff_t = b1_t - b2_t
         diff = b1[mask] - b2[mask]
 
-        # only keep non-NaN values
-        mask = (~np.isnan(diff))
-        diff = diff[mask]
-        diff_t = diff_t[mask]
-
         # perform t-test with transformed data
         if diff_t.size == 0:
-            mean_diff, p_val = np.nan, np.nan
+            mean_diff, p_val, corr, p_corr = np.nan, np.nan, np.nan, np.nan
         else:
             _, p_val = stats.ttest_1samp(
                 diff_t, popmean=0, alternative='greater')
             mean_diff = np.nanmean(diff)
+            corr, p_corr = stats.pearsonr(b1[mask], b2[mask])
+            slope, intercept, r_value, p_value, std_err = stats.linregress(
+                b1[mask], b2[mask])
 
         results[f"mean_diff_{name}"] = mean_diff
         results[f"p_{name}"] = p_val
+        results[f"corr_{name}"] = corr
+        results[f"p_corr_{name}"] = p_corr
+        results[f"slope_{name}"] = slope
+        results[f"intercept_{name}"] = intercept
+        results[f"n_{name}"] = np.sum(mask)
 
     return results

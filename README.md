@@ -30,3 +30,4 @@ Run the following scripts, in order. They are designed to be run with a slurm wo
 - 2i_synthetic_shuffle.py (synthetic tests)
 - 2j_synthetic shuffle_agg.py (aggregates synthetic tests)
 - 3_all_plots.ipynb (jupyternotebook that recreates all plots shown in the article including the supplement)
+- 4_* These are the scripts necessary to make the map that is openly available on Zenodo.

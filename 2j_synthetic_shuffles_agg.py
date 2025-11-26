@@ -38,6 +38,7 @@ for ii in range(500):
     )
     df = pd.read_csv(filename, index_col=0)
     res = test_hypothesis(df)
+    print(res)
     res["iteration"] = ii   # keep track of which run it came from
     results_list.append(res)
 
