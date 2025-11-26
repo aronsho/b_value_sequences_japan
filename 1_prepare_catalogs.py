@@ -46,6 +46,9 @@ p1 = np.array(eval(variables["p1"]))
 p2 = np.array(eval(variables["p2"]))
 EPSG_GEOGRAPHIC = variables["EPSG_GEOGRAPHIC"]
 EPSG_JAPAN_M = variables["EPSG_JAPAN_M"]
+DEPTH_THRESHOLD = variables["DEPTH_THRESHOLD"]
+TIME_START = variables["TIME_START"]
+
 # ======== HELPERS ===============
 
 
@@ -64,10 +67,10 @@ def load_clean_catalog(csv_path: Path) -> Catalog:
     cat = Catalog(df)
     # set binning width
     cat.bin_magnitudes(0.1, inplace=True)
-    # only consider events from 2000 onwards
-    cat = cat[cat["time"] >= "2000-01-01"]
-    # only consider events with depth <= 150 km
-    cat = cat[cat["depth"] <= 150]
+    # only consider events from TIME_START onwards
+    cat = cat[cat["time"] >= TIME_START]
+    # only consider events with depth <= DEPTH_THRESHOLD km
+    cat = cat[cat["depth"] <= DEPTH_THRESHOLD]
     return cat
 
 
