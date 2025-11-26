@@ -1,4 +1,4 @@
-# sbatch --array=0-2499 --mem-per-cpu=256000 --wrap="python 2d_map_high.py"
+# sbatch --array=0-999 --mem-per-cpu=256000 --wrap="python 2d_map_high.py"
 
 # ========= IMPORTS =========
 import time as time_module
@@ -21,7 +21,7 @@ t = time_module.time()
 # single value
 RESULT_TMP = Path("results/map/tmp")
 
-N_REALIZATIONS = 500
+N_REALIZATIONS = 200
 NS = np.array([6400, 12800, 25600, 51200, 102400])  # number of tiles
 
 # Map job_index to (N, realization)

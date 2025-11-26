@@ -21,7 +21,7 @@ t = time_module.time()
 # single value
 RESULT_DIR = Path("results/map")
 
-N_REALIZATIONS = 500
+N_REALIZATIONS = 200
 NS = np.array([200, 400, 800, 1600, 3200])  # number of tiles
 
 # Map job_index to N

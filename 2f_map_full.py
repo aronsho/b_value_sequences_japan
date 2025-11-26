@@ -1,5 +1,5 @@
 # sbatch
-# --array=0-499 --time=480 --mem-per-cpu=128000 --wrap="python 2f_map_full.py"
+# --array=0-499 --time=480 --mem-per-cpu=256000 --wrap="python 2f_map_full.py"
 
 
 # ========= IMPORTS =========
@@ -30,7 +30,6 @@ t = time_module.time()
 RESULT_TMP = Path("results/map/tmp_full")
 
 N_REALIZATIONS = 500
-N = 25600  # number of tiles
 DELTA_XY = 0.2  # in deg
 DELTA_Z = 0.2   # in deg
 COMPUTE_GRID = True  # First time running, this has to be True!
@@ -38,7 +37,6 @@ COMPUTE_GRID = True  # First time running, this has to be True!
 if job_index > N_REALIZATIONS - 1:
     raise ValueError(
         "SLURM_ARRAY_TASK_ID too large for available realizations")
-print(f"Parameters: N={N}, job_index={job_index}")
 
 # ======== LOAD PARAMETERS ======
 DIR = Path("data")
@@ -71,6 +69,11 @@ DAYS_BEFORE = variables["DAYS_BEFORE"]
 RADIUS_FAR = variables["RADIUS_FAR"]
 EXCLUDE_AFTERSHOCK_DAYS = variables["EXCLUDE_AFTERSHOCK_DAYS"]
 MIN_N_SEQ = variables["MIN_N_SEQ"]
+
+# map
+N_FULL_MAP = variables["N_FULL_MAP"] # number of spatial tiles
+print(f"Parameters: N={N_FULL_MAP}, job_index={job_index}")
+
 
 # ========= HELPERS =========
 
@@ -187,7 +190,7 @@ if __name__ == "__main__":
         delta_m=DELTA_M,
         times=filtered_df.time,
         limits=limits,
-        n_space=N,
+        n_space=N_FULL_MAP,
         n_realizations=1,
         eval_coords=grid,
         min_num=MIN_N_M,
@@ -201,9 +204,9 @@ if __name__ == "__main__":
 
     # save b-value maps as a DataFrame
     b_df = pd.DataFrame({"b_val": b_avg})
-    tmp_file = RESULT_TMP / f"b_values_N{N}_R{job_index+1}.csv"
+    tmp_file = RESULT_TMP / f"b_values_N{N_FULL_MAP}_R{job_index+1}.csv"
     b_df.to_csv(tmp_file, index=False)
-    print(f"N = {N}: Saved realization {job_index+1} to {tmp_file}")
+    print(f"N = {N_FULL_MAP}: Saved realization {job_index+1} to {tmp_file}")
 
 print("time = ", time_module.time() - t)
 print('sbatch --array=0-99 --time=480 ' +
