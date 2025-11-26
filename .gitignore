@@ -1,7 +1,4 @@
 env/
 functions/__pycache__
-data/catalogs
-data/catalogs_old/
 data/df_grid.csv
-results/*
 __pycache__/

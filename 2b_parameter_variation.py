@@ -1,5 +1,5 @@
 # sbatch
-# --array=0-647 --mem-per-cpu=4000 --wrap="python 2b_parameter_variation.py"
+# --array=0-1943 --mem-per-cpu=4000 --wrap="python 2b_parameter_variation.py"
 
 # ========= IMPORTS =========
 import os
@@ -22,13 +22,14 @@ t = time_module.time()
 RESULT_DIR = Path("results/parameter_variation")
 
 # multiple values
-MAGNITUDE_THRESHOLDS = [5.5, 6.0, 6.5]
-B_METHODS = ["global", "local"]
-RUPTURE_RELATIONS = ["surface", "subsurface"]
-DAYS_AFTERS = [50, 100, 200]
-DISTANCE_TO_COASTS = [30, 40, 50]
-DIMENSIONS = [2, 3]
-EXCLUDE_AFTERSHOCKS_DAYS = [0, 1, 2]
+MAGNITUDE_THRESHOLDS = [6.5]
+B_METHODS = ["global"]
+RUPTURE_RELATIONS = ["surface"]
+DAYS_AFTERS = [100]
+DISTANCE_TO_COASTS = [40]
+DIMENSIONS = [3]
+EXCLUDE_AFTERSHOCKS_DAYS = [1]
+DEPTH_THRESHOLDS = [150]
 
 param_grid = it.product(
     MAGNITUDE_THRESHOLDS,
@@ -38,6 +39,7 @@ param_grid = it.product(
     DISTANCE_TO_COASTS,
     DIMENSIONS,
     EXCLUDE_AFTERSHOCKS_DAYS,
+    DEPTH_THRESHOLDS
 )
 param_combinations = list(param_grid)
 print(f"{len(param_combinations)} parameter combinations found.")
@@ -47,12 +49,14 @@ print(f"{len(param_combinations)} parameter combinations found.")
  DAYS_AFTER,
  DISTANCE_TO_COAST,
  DIMENSION,
- EXCLUDE_AFTERSHOCKS_DAY) = param_combinations[job_index]
+ EXCLUDE_AFTERSHOCKS_DAY,
+ DEPTH_THRESHOLD) = param_combinations[job_index]
 print(f"Parameters: "
       f"MAGNITUDE_THRESHOLD={MAGNITUDE_THRESHOLD}, B_METHOD={B_METHOD}, "
       f"RUPTURE_RELATION={RUPTURE_RELATION}, DAYS_AFTER={DAYS_AFTER}, "
       f"DISTANCE_TO_COAST={DISTANCE_TO_COAST}, DIMENSION={DIMENSION}, "
-      f"EXCLUDE_AFTERSHOCKS_DAY={EXCLUDE_AFTERSHOCKS_DAY}")
+      f"EXCLUDE_AFTERSHOCKS_DAY={EXCLUDE_AFTERSHOCKS_DAY}, "
+      f"DEPTH_THRESHOLD={DEPTH_THRESHOLD}")
 
 # ======== LOAD PARAMETERS ======
 DIR = Path("data")
@@ -88,6 +92,9 @@ if __name__ == "__main__":
     cat_far = load_catalog(fname_far, MC_FIXED -
                            CORRECTION_FACTOR, DELTA_M, CAT_DIR)
 
+    # filter by depth
+    cat_close = cat_close[cat_close.depth <= DEPTH_THRESHOLD]
+
     # find sequences
     print('Finding sequences...')
     seqs, main_idx, cat_close = find_sequences(
@@ -121,12 +128,12 @@ if __name__ == "__main__":
     save_name = (
         f"df_b_values_{MAGNITUDE_THRESHOLD}M_{B_METHOD}_{RUPTURE_RELATION}_"
         f"{DAYS_AFTER}days_{DISTANCE_TO_COAST}km_{DIMENSION}D_"
-        f"{EXCLUDE_AFTERSHOCKS_DAY}days.csv"
+        f"{EXCLUDE_AFTERSHOCKS_DAY}days_{DEPTH_THRESHOLD}depth.csv"
     )
     out_path = RESULT_DIR / save_name
     df_b.to_csv(out_path)
     print(f"  Saved: {out_path}")
 
 print("time = ", time_module.time() - t)
-print('sbatch --array=0-647 --mem-per-cpu=4000 ' +
+print('sbatch --array=0-1943 --mem-per-cpu=4000 ' +
       '--wrap="python 2b_parameter_variation.py"')

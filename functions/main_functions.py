@@ -125,6 +125,7 @@ def find_sequences(cat_close: Catalog,
                    radius_far: float,
                    min_n_seq: int,
                    post_include_aftershocks: bool = False,
+                   show_progress = False,
                    ) -> tuple[list[pd.DataFrame], list[int], Catalog]:
     """
     Identify large-event sequences in catalog. Then, it removes events that
@@ -145,8 +146,9 @@ def find_sequences(cat_close: Catalog,
 
     # find sequences
     sequences, main_indices = [], []
-    progress_bar = tqdm(total=len(large_close) *
-                        len(large_far), desc="Progress")
+    if show_progress:
+        progress_bar = tqdm(total=len(large_close) *
+                            len(large_far), desc="Progress")
     for idx, main in large_close.iterrows():
         # select nearby events
         dist_all = distance_series(cat_close, main, dimension)
@@ -158,7 +160,8 @@ def find_sequences(cat_close: Catalog,
         for jj in large_far.index:
             if jj == idx:
                 continue
-            progress_bar.update(1)
+            if show_progress:
+                progress_bar.update(1)
             other = large_far.loc[jj]
             dist = distance_series(other, main, dimension)
 

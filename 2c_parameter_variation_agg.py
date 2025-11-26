@@ -16,6 +16,7 @@ PARAMS = {
     "distance_to_coast": [30, 40, 50],
     "dimension": [2, 3],
     "exclude_aftershocks_day": [0, 1, 2],
+    "depth_threshold": [50, 100, 150],
 }
 
 # Generate parameter combinations as dicts
@@ -68,8 +69,9 @@ for params in param_combinations:
     filename = RESULT_DIR / (
         f"df_b_values_{params['magnitude_threshold']}M_{params['b_method']}_"
         f"{params['rupture_relation']}_{params['days_after']}days_"
-        f"{params['distance_to_coast']}km_{params['dimension']}D"
-        f"_{params['exclude_aftershocks_day']}days.csv"
+        f"{params['distance_to_coast']}km_{params['dimension']}D_"
+        f"{params['exclude_aftershocks_day']}days_"
+        f"{params['depth_threshold']}depth.csv"
     )
 
     if not filename.exists():
