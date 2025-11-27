@@ -12,8 +12,8 @@ SHAPE_DIR = Path("data/shape_japan")
 CAT_DIR = Path("data/catalogs")
 
 # ========= PARAMETERS ======
-DIMENSION = 3                 # 2 or 3
-BUFFER_M = 40_000            # 30 km
+DIMENSION = 3               # 2 or 3
+BUFFER_M = 40_000           # 40 km
 
 # transformation info
 EPSG_GEOGRAPHIC = 4326      # WGS84

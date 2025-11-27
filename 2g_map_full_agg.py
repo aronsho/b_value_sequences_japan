@@ -11,20 +11,20 @@ import pandas as pd
 RESULT_DIR = Path("results/map")
 RESULT_TMP = Path("results/map/tmp_full")
 
-N = 51200  # number of tiles
-
 # ======== LOAD PARAMETERS ======
 DIR = Path("data")
 variables_df = pd.read_csv(DIR / "variables.csv")
 variables = variables_df.to_dict(orient="records")[0]
 
+N_FULL_MAP = variables["N_FULL_MAP"]
+
 # ========= MAIN =========
 if __name__ == "__main__":
     # aggregate results
     # Gather all realization files for this N
-    files_for_N = list(RESULT_TMP.glob(f"b_values_N{N}_R*.csv"))
+    files_for_N = list(RESULT_TMP.glob(f"b_values_N{N_FULL_MAP}_R*.csv"))
     if not files_for_N:
-        raise ValueError(f"No b_values files found for N={N}")
+        raise ValueError(f"No b_values files found for N={N_FULL_MAP}")
 
     # Stack vectors and average
     stack = np.column_stack([pd.read_csv(f)["b_val"] for f in files_for_N])
@@ -41,6 +41,6 @@ if __name__ == "__main__":
         "b_std": b_std,
     })
 
-    out_file = RESULT_DIR / f"b_values_N{N}_full.csv"
+    out_file = RESULT_DIR / f"b_values_N{N_FULL_MAP}_full.csv"
     b_df.to_csv(out_file, index=False)
-    print(f"N = {N}: saved aggregated results to {out_file}")
+    print(f"N = {N_FULL_MAP}: saved aggregated results to {out_file}")
