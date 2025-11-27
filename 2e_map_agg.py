@@ -12,7 +12,7 @@ RESULT_DIR = Path("results/map")
 RESULT_TMP = Path("results/map/tmp")
 
 # mutliple values
-NS = np.array([6400, 12800, 25600, 51200, 102400])  # number of tiles
+NS = np.array([6400, 12800, 25600])  # number of tiles
 
 # ======== LOAD PARAMETERS ======
 DIR = Path("data")
@@ -39,7 +39,7 @@ if __name__ == "__main__":
             "b_std": b_std,
         })
 
-        out_file = RESULT_DIR / f"b_values_{N}.csv"
+        out_file = RESULT_DIR / f"b_values_N{N}.csv"
         b_df.to_csv(out_file, index=False)
         print(f"N = {N}: saved aggregated results to {out_file}")
 

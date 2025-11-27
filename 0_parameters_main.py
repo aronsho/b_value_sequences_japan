@@ -43,7 +43,7 @@ EXCLUDE_AFTERSHOCK_DAYS = 1     # number of aftershocks excluded from analysis
 MIN_N_SEQ = 200                 # minimum number per seq to take into account
 
 # for map
-N_FULL_MAP = 51200            # number of tiles for full map
+N_FULL_MAP = 25600            # number of tiles for full map
 
 # evaluation
 P_THRESHOLD = 0.05           # threshold for p-value
@@ -65,6 +65,8 @@ variables_dict = {
     "MIN_N_M": MIN_N_M,
     "B_METHOD": B_METHOD,
     "MAGNITUDE_THRESHOLD": MAGNITUDE_THRESHOLD,
+    "DEPTH_THRESHOLD": DEPTH_THRESHOLD,
+    "TIME_START": TIME_START,
     "RUPTURE_RELATION": RUPTURE_RELATION,
     "DAYS_AFTER": DAYS_AFTER,
     "DAYS_BEFORE": DAYS_BEFORE,

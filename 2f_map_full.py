@@ -71,7 +71,7 @@ EXCLUDE_AFTERSHOCK_DAYS = variables["EXCLUDE_AFTERSHOCK_DAYS"]
 MIN_N_SEQ = variables["MIN_N_SEQ"]
 
 # map
-N_FULL_MAP = variables["N_FULL_MAP"] # number of spatial tiles
+N_FULL_MAP = variables["N_FULL_MAP"]  # number of spatial tiles
 print(f"Parameters: N={N_FULL_MAP}, job_index={job_index}")
 
 

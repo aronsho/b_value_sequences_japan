@@ -22,7 +22,7 @@ t = time_module.time()
 RESULT_TMP = Path("results/map/tmp")
 
 N_REALIZATIONS = 200
-NS = np.array([6400, 12800, 25600, 51200, 102400])  # number of tiles
+NS = np.array([6400, 12800, 25600])  # number of tiles
 
 # Map job_index to (N, realization)
 n_space_index = job_index // N_REALIZATIONS
