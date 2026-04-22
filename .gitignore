@@ -2,3 +2,4 @@ env/
 functions/__pycache__
 data/df_grid.csv
 __pycache__/
+results/sequence_images*

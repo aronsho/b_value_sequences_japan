@@ -141,7 +141,7 @@ def create_map(sequence, sequence_main_idx, cat_all, exclude_aftershock_days):
 
     # Plot the data points
     # Coastline
-    ax.plot(df_coast['longitude'], df_coast['latitude'], 'k',
+    ax.plot(df_coast['longitude'], df_coast['latitude'],
             linewidth=0.5, transform=ccrs.PlateCarree(), color='grey')
 
     # Geodesic circles
@@ -432,20 +432,23 @@ if __name__ == "__main__":
         print(f"Making plots for sequence no {sequence_no}...")
         sequence = seqs[sequence_no]
         sequence_noaftershock = seqs_noaftershocks[sequence_no]
-        img_map = create_map(
-            sequence, main_idx[sequence_no], cat_close,
-            EXCLUDE_AFTERSHOCK_DAYS)
-        img_time = create_time_plot(
-            sequence, main_idx[sequence_no], cat_close,
-            EXCLUDE_AFTERSHOCK_DAYS)
-        img_fmd = create_fmd(sequence_noaftershock,
-                             main_idx[sequence_no],
-                             cat_close,
-                             DELTA_M,
-                             CORRECTION_FACTOR,
-                             DMC,
-                             EXCLUDE_AFTERSHOCK_DAYS,
-                             RADIUS_CLOSE,
-                             MIN_N_M)
-        save_joint_plot_fmd(img_map, img_time, img_fmd,
-                            sequence_no, RESULT_DIR)
+        try:
+            img_map = create_map(
+                sequence, main_idx[sequence_no], cat_close,
+                EXCLUDE_AFTERSHOCK_DAYS)
+            img_time = create_time_plot(
+                sequence, main_idx[sequence_no], cat_close,
+                EXCLUDE_AFTERSHOCK_DAYS)
+            img_fmd = create_fmd(sequence_noaftershock,
+                                 main_idx[sequence_no],
+                                 cat_close,
+                                 DELTA_M,
+                                 CORRECTION_FACTOR,
+                                 DMC,
+                                 EXCLUDE_AFTERSHOCK_DAYS,
+                                 RADIUS_CLOSE,
+                                 MIN_N_M)
+            save_joint_plot_fmd(img_map, img_time, img_fmd,
+                                sequence_no, RESULT_DIR)
+        except Exception as e:
+            print(f"Error processing sequence no {sequence_no}: {e}")

@@ -125,7 +125,7 @@ def find_sequences(cat_close: Catalog,
                    radius_far: float,
                    min_n_seq: int,
                    post_include_aftershocks: bool = False,
-                   show_progress = False,
+                   show_progress: bool = False,
                    ) -> tuple[list[pd.DataFrame], list[int], Catalog]:
     """
     Identify large-event sequences in catalog. Then, it removes events that
