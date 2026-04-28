@@ -4,7 +4,7 @@ With this repository, you can recreate all the results of the article.
 
 Software needed:
 - Python>=3.10
-- Python packages: rft1d, seismostats
+- Python packages: rft1d, seismostats, cmcrameri, tqdm 
 
 Files needed:
 The only additional file that is needed is an earthquake catalog of japan. This catalog should be a cvs with the following collumns (case sensitive): time, latitude, longitude, depth, magnitude, event_type.
